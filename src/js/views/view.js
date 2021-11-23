@@ -1,11 +1,14 @@
 import icons from 'url:../../img/icons.svg'; //parcel 2 uses this syntac to import imgs
 export default class View{
     _data;
-    render(data){
+    render(data, render=true){
         if(!data || Array.isArray(data) && data.length === 0 ) return this.renderError();
 
         this._data = data;
         const markup = this._generateMarkup();
+
+        if (!render) return markup;
+
         this.clear();
         this._parentElement.insertAdjacentHTML('afterbegin',markup);
     }
@@ -13,6 +16,35 @@ export default class View{
         this._parentElement.innerHTML = '';
     }
 
+    update(data){
+
+      this._data = data;
+      const newMarkup = this._generateMarkup();
+
+      const newDOM = document.createRange().createContextualFragment(newMarkup);
+      const newElements = Array.from(newDOM.querySelectorAll('*'));
+      const curElements = Array.from(this._parentElement.querySelectorAll('*'));
+
+      // console.log(curElements);
+      // console.log(newElements);
+
+      newElements.forEach((newEl,i) => {
+        const curEl = curElements[i];
+        //update change text
+        if(!newEl.isEqualNode(curEl) && newEl.firstChild?.nodeValue.trim() !== ''){
+          // console.log(newEl,newEl.firstChild?.nodeValue.trim());
+          curEl.textContent = newEl.textContent;
+        }
+
+        // udpate change attribute
+        if(!newEl.isEqualNode(curEl)){
+          // console.log(Array.from(newEl.attributes));
+          Array.from(newEl.attributes).forEach(attr => {
+            curEl.setAttribute(attr.name,attr.value);
+          });
+        }
+      });
+    }
     renderSpinner(){
         const markup = `
               <div class="spinner">
